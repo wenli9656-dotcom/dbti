@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DBTI · Down Bad Type Indicator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+      background: #0d0d0d;
+      color: #f0f0f0;
+      min-height: 100vh;
+    }
+
+    .screen {
+      width: 100%;
+      max-width: 480px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 28px;
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      transition: opacity 0.2s ease;
+    }
+
+    .screen.hidden { opacity: 0; pointer-events: none; }
+
+    /* ── Landing ── */
+    #landing { text-align: center; overflow-y: auto; justify-content: flex-start; padding-top: 80px; }
+
+    .badge {
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: #555;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .main-title {
+      font-size: 80px;
+      font-weight: 900;
+      letter-spacing: -5px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .main-full {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: #444;
+      margin-bottom: 28px;
+      text-transform: uppercase;
+    }
+
+    .main-desc {
+      font-size: 16px;
+      color: #888;
+      line-height: 1.9;
+      margin-bottom: 28px;
+    }
+
+    .theory-box {
+      width: 100%;
+      margin-bottom: 32px;
+      padding: 18px 20px;
+      border-left: 2px solid #444;
+      background: rgba(255,255,255,0.03);
+      border-radius: 0 10px 10px 0;
+      text-align: left;
+    }
+
+    .theory-title {
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: #666;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .theory-body {
+      font-size: 13px;
+      color: #999;
+      line-height: 1.75;
+    }
+
+    .theory-body strong { color: #bbb; font-weight: 600; }
+
+    .meta-info {
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 44px;
+      letter-spacing: 1px;
+    }
+
+    .btn-start {
+      background: #f0f0f0;
+      color: #0d0d0d;
+      border: none;
+      padding: 18px 56px;
+      border-radius: 56px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: transform 0.1s, opacity 0.1s;
+      margin-bottom: 64px;
+    }
+
+    .btn-start:active { transform: scale(0.95); opacity: 0.8; }
+
+    /* ── Question ── */
+    #question-screen { justify-content: flex-start; padding-top: 72px; }
+
+    .progress-wrap { width: 100%; margin-bottom: 48px; }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .progress-bar { width: 100%; height: 1px; background: #222; }
+
+    .progress-fill {
+      height: 100%;
+      background: #f0f0f0;
+      transition: width 0.25s ease;
+    }
+
+    .q-index {
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: #444;
+      margin-bottom: 22px;
+      text-transform: uppercase;
+      align-self: flex-start;
+    }
+
+    .q-text {
+      font-size: 21px;
+      font-weight: 700;
+      line-height: 1.5;
+      letter-spacing: -0.3px;
+      margin-bottom: 44px;
+      align-self: flex-start;
+      color: #f0f0f0;
+    }
+
+    .btn-back {
+      align-self: flex-start;
+      background: transparent;
+      border: none;
+      color: #444;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: 32px;
+      letter-spacing: 0.5px;
+    }
+    .btn-back:active { color: #888; }
+    .btn-back.invisible { visibility: hidden; pointer-events: none; }
+
+    .choices { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+
+    .choice-btn {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #ccc;
+      padding: 17px 20px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.12s, transform 0.08s;
+      line-height: 1.5;
+    }
+
+    .choice-btn:active {
+      background: rgba(255,255,255,0.1);
+      transform: scale(0.985);
+    }
+
+    .choice-btn.choice-c {
+      font-size: 13px;
+      color: #666;
+      padding: 12px 20px;
+      background: transparent;
+      border-color: rgba(255,255,255,0.05);
+    }
+
+    .choice-alpha {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: #444;
+      margin-bottom: 5px;
+    }
+
+    .choice-btn.choice-c .choice-alpha { display: none; }
+
+    /* ── Result ── */
+    #result {
+      justify-content: flex-start;
+      padding-top: 72px;
+      text-align: center;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    #result::-webkit-scrollbar { display: none; }
+    #landing { scrollbar-width: none; }
+    #landing::-webkit-scrollbar { display: none; }
+
+    .r-type-code {
+      font-size: 10px;
+      letter-spacing: 6px;
+      color: #444;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+
+    .r-type-en {
+      font-size: 68px;
+      font-weight: 900;
+      letter-spacing: -4px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .r-type-zh {
+      font-size: 13px;
+      color: #666;
+      letter-spacing: 2px;
+      margin-bottom: 36px;
+    }
+
+    .r-divider { width: 24px; height: 1px; background: #222; margin: 0 auto 28px; }
+
+    .r-tagline {
+      font-size: 14px;
+      color: #555;
+      font-style: italic;
+      margin-bottom: 28px;
+    }
+
+    .r-desc {
+      font-size: 16px;
+      color: #ddd;
+      line-height: 1.95;
+      text-align: left;
+      margin-bottom: 36px;
+      white-space: pre-line;
+    }
+
+    .r-section {
+      width: 100%;
+      margin-bottom: 36px;
+      text-align: left;
+    }
+
+    .r-section-title {
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: #555;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .r-box {
+      font-size: 15px;
+      color: #bbb;
+      line-height: 1.85;
+      padding: 18px 20px;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+    }
+
+    /* ── Dimensions ── */
+    .dims-section { width: 100%; margin-bottom: 44px; text-align: left; }
+
+    .dims-title {
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: #555;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .dim-block { margin-bottom: 22px; }
+
+    .dim-name {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .dim-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .dim-end {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 36px;
+      flex-shrink: 0;
+    }
+
+    .dim-letter {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ddd;
+      line-height: 1;
+    }
+
+    .dim-word {
+      font-size: 10px;
+      color: #555;
+      margin-top: 2px;
+    }
+
+    .dim-track {
+      flex: 1;
+      height: 3px;
+      background: #1a1a1a;
+      margin: 0 10px;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .dim-fill {
+      height: 100%;
+      background: #f0f0f0;
+      border-radius: 3px;
+    }
+
+    .dim-pct {
+      font-size: 11px;
+      color: #444;
+      width: 32px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .r-footer {
+      font-size: 12px;
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .btn-retry {
+      background: transparent;
+      border: 1px solid #222;
+      color: #555;
+      padding: 12px 32px;
+      border-radius: 56px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-bottom: 64px;
+    }
+
+    .btn-retry:active { opacity: 0.5; }
+  </style>
+</head>
+<body>
+
+<!-- Landing -->
+<div id="landing" class="screen">
+  <p class="badge">Down Bad Type Indicator</p>
+  <h1 class="main-title">DBTI</h1>
+  <p class="main-full">Down Bad Type Indicator</p>
+  <p class="main-desc">不测你适合谁<br>只测你遇到心动的人<br>会怎么上头</p>
+
+  <div class="theory-box">
+    <p class="theory-title">理论基础</p>
+    <p class="theory-body">
+      基于 <strong>依恋理论（Bowlby, 1969 · Hazan &amp; Shaver, 1987）</strong> 与
+      <strong>双过程认知模型（Kahneman, 2011）</strong>，
+      从趋近动机、信息处理偏好、情感激活速度、情感表达策略四个维度，
+      测量你在亲密关系中的真实行为模式。
+    </p>
+  </div>
+
+  <p class="meta-info">20 道题 · 约 2 分钟 · 16 种人格</p>
+  <button class="btn-start" onclick="startTest()">开始测序</button>
+</div>
+
+<!-- Question -->
+<div id="question-screen" class="screen hidden">
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span id="q-num">1 / 20</span>
+      <span id="q-pct">0%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+  <button class="btn-back invisible" id="btn-back" onclick="goBack()">← 上一题</button>
+  <p class="q-index" id="q-index">QUESTION 01</p>
+  <p class="q-text" id="q-text"></p>
+  <div class="choices">
+    <button class="choice-btn" onclick="answer('a')">
+      <span class="choice-alpha">A</span>
+      <span id="choice-a"></span>
+    </button>
+    <button class="choice-btn" onclick="answer('b')">
+      <span class="choice-alpha">B</span>
+      <span id="choice-b"></span>
+    </button>
+    <button class="choice-btn choice-c" onclick="answer('c')">
+      <span class="choice-alpha">C</span>
+      以上都不是
+    </button>
+  </div>
+</div>
+
+<!-- Result -->
+<div id="result" class="screen hidden">
+  <p class="r-type-code" id="r-code"></p>
+  <h2 class="r-type-en" id="r-name-en"></h2>
+  <p class="r-type-zh" id="r-name-zh"></p>
+  <div class="r-divider"></div>
+  <p class="r-tagline" id="r-tagline"></p>
+  <p class="r-desc" id="r-desc"></p>
+
+  <div class="r-section">
+    <p class="r-section-title">你的暧昧模式</p>
+    <div class="r-box" id="r-pattern"></div>
+  </div>
+
+  <div class="r-section">
+    <p class="r-section-title">最难读懂你的地方</p>
+    <div class="r-box" id="r-blind"></div>
+  </div>
+
+  <div class="dims-section">
+    <p class="dims-title">四个维度</p>
+    <div id="r-dims"></div>
+  </div>
+
+  <p class="r-footer">截图发给认识的人，让他猜你是哪种</p>
+  <button class="btn-retry" onclick="restartTest()">重新测一次</button>
+</div>
+
+<script>
+const QUESTIONS = [
+  // Dim 0: P(追) vs W(等)
+  { d:0, q:'你喜欢一个人，但还不确定对方什么感觉，你会', a:'先往前走，边走边观察', b:'等到有明确信号再表态' },
+  { d:0, q:'想约对方出去，但他没有主动提，你会', a:'自己提，不然这个时机就过了', b:'再等等看，也许他会先说' },
+  { d:0, q:'感情进展比你期望的慢，你的反应更接近', a:'找机会主动推进一步', b:'给他时间，也许节奏就是这样' },
+  { d:0, q:'感情里，你认为主动是一件什么性质的事', a:'你清楚自己要什么，并且敢要', b:'有风险，暴露了就很难收回来' },
+  { d:0, q:'你对一个人的感觉越来越强，你更可能做的是', a:'找机会让他感受到你对他有些不同', b:'什么都不变，继续观察' },
+
+  // Dim 1: R(证) vs F(感)
+  { d:1, q:'你怎么判断一个人喜不喜欢你', a:'看他做了什么——联系频率、主动程度、实际行动', b:'感觉得到，直觉准的' },
+  { d:1, q:'对方说了句让你在意的话，接下来你会', a:'看他后续怎么做，才能确认他什么意思', b:'心里已经开始各种解读了' },
+  { d:1, q:'对方突然冷淡了，你第一反应是', a:'找一个最合理的客观解释（他最近可能很忙）', b:'直接感觉到哪里不对了' },
+  { d:1, q:'一段感情走到一半你开始不确定，你会怎么判断要不要继续', a:'回顾对方实际做了什么、态度怎么变化的', b:'看你内心对这段关系的感受还在不在' },
+  { d:1, q:'你对感情的判断，更多是靠', a:'可以被观察到的事实和行动', b:'内心对整段关系的整体感受' },
+
+  // Dim 2: H(快) vs C(慢)
+  { d:2, q:'你通常在什么阶段确认喜欢一个人', a:'认识没多久，感觉就来了', b:'相处了一段时间，慢慢确认的' },
+  { d:2, q:'你喜欢一个人之后，整体状态是', a:'很快沉进去，整个人都会受影响', b:'有感觉但还在观察，没有完全投入' },
+  { d:2, q:'你的情感投入，在一段关系里的走势是', a:'开始时最强，之后慢慢平稳下来', b:'越往后越深，初期其实还比较浅' },
+  { d:2, q:'对你来说，第一次见面/接触能决定多少', a:'很多，第一印象和第一次感觉很重要', b:'不确定，我需要多次接触才能形成判断' },
+  { d:2, q:'「心动」对你来说是一件什么性质的事', a:'当下发生的，一点就燃', b:'慢慢渗透进来的，不是一瞬间的事' },
+
+  // Dim 3: E(说) vs I(藏)
+  { d:3, q:'你对一个人动心了，你的朋友什么时候会知道', a:'很快，我说不说他们都能感觉出来', b:'很久之后，甚至可能一直不知道' },
+  { d:3, q:'感情里出现了让你不舒服的事，你更可能', a:'直接说出来，哪怕有点尴尬', b:'自己消化，不到关键时刻不说' },
+  { d:3, q:'你的感情状态，在外人眼里是', a:'比较透明，人们能感受到你的变化', b:'不透明，你平时看起来总是差不多' },
+  { d:3, q:'对方误解了你，你会', a:'解释，说清楚是怎么回事', b:'算了，懒得解释，或者觉得没必要' },
+  { d:3, q:'你更倾向于', a:'把感情状态说清楚，给彼此一个明确的答案', b:'让关系自然演化，不强迫定义' },
+];
+
+const TYPES = {
+  PRHE:{ en:'HUNT', zh:'猎手型', tag:'清醒的人，也是最敢的人',
+    desc:'你知道自己想要什么，也知道怎么去拿。喜欢一个人，你不会等在原地——你制造机会，找借口接近，一步一步往前走。\n\n但你的主动不是盲目的。你需要看到实际信号才会真正投入，对方的行动是你判断的依据，不是你的幻想。这让你在追的同时保持清醒，很少被虚假的暧昧消耗。\n\n心动快，表达也快。等不了太久的模糊状态，你会自己去把事情说清楚——不是因为不懂分寸，是因为你不想把时间花在猜谜上。',
+    pattern:'遇到喜欢的人会迅速进入状态，开始主动联系、制造见面机会。你对关系的走向有清楚的判断，推进节奏由你掌控，很少让自己陷入被动等待的焦虑。',
+    blind:'你的主动有时候会让对方感到压迫，但你自己察觉不到。你以为你在表达，对方感受到的是推进——速度和边界感是你需要注意的地方。' },
+
+  PRHI:{ en:'BLADE', zh:'暗刃型', tag:'在动，只是你看不见',
+    desc:'你会动，但不会让人看见你在动。心动很快，行动也在走，只是方式不容易被察觉——你在推进，但你不说出来，不让对方知道你的真实意图。\n\n你需要看到实际证据才确认感情，就算确认了，也不会轻易开口。你更愿意用行动回应，而不是言语表达。\n\n你的感情里有很多暗流。表面平静，甚至显得不在乎，但方向一直很清楚。等你真正行动的时候，往往已经想好了一切。',
+    pattern:'主动但不显眼，会找理由接近对方，但不会让人感觉到你在追。你心里对关系进展有清楚的判断，但很少直接说出来。',
+    blind:'你的方式让对方很难读懂你的意图，有时候他们甚至不知道你对他有感觉。这会导致感情悬在模糊状态很久，双方都在等。' },
+
+  PRCE:{ en:'HOLD', zh:'稳局型', tag:'不快，但不停',
+    desc:'你是慢热的主动派。不会一开始就把所有筹码押进去，但如果决定了要推进，你会认真、持续地做。\n\n你需要相处积累才会真正有感觉，相处久了，判断清楚了，才会开始行动。这让你的感情节奏比大多数人慢，但也更稳——你不会因为一时的心动就做出冲动的决定。\n\n说出来对你来说不难，但你只在确认值得的时候才说。直接，但有分寸。',
+    pattern:'对关系的进展有稳定的节奏感，不快，但也不停。你会持续保持联系、制造相处机会，只是不急着推到下一阶段。',
+    blind:'你的节奏让对方可能感受不到你在推进，以为你只是普通在来往。偶尔需要让对方知道你的方向，否则机会会在等待中消失。' },
+
+  PRCI:{ en:'FROST', zh:'冷峰型', tag:'里面早有答案了，只是不告诉你',
+    desc:'你的感情是外人最难读懂的类型。主动但不显，慢热但坚定，需要实证才动心，动心了也不说出来。\n\n从外面看，你对谁都差不多——冷静、有礼、不过界。但里面的你已经在认真计算了，方向、节奏、时机，你都想清楚了，只是还没到你认为合适的时候。\n\n等你真正行动的时候，往往是深思熟虑之后。不是犹豫，是等待最好的时机。',
+    pattern:'感情进展完全在你的内心运作，外人看不见任何迹象。你需要大量信息才能确认一段感情值得投入，确认之后你会行动，但不说。',
+    blind:'你对自己太过内敛。对方很可能完全不知道你有感觉，甚至以为你对感情不感兴趣，从而不会进一步接近你。' },
+
+  PFHE:{ en:'BLAZE', zh:'烈焰型', tag:'没什么可藏的，也没打算藏',
+    desc:'你是感情里最敢的那种人。一眼就能动心，心动了就去追，追的时候直接说——你没什么可藏的，也没打算藏。\n\n你靠感觉判断，不需要太多实证，直觉告诉你可以就够了。这让你进入感情的速度很快，但也意味着你可能在对方还没确认之前就已经全力投入了。\n\n你的能量是开放的，对方能真实感受到你喜欢他。这是你的吸引力，也是你在感情里最容易受伤的地方——你太真实了，没有任何保护层。',
+    pattern:'遇到喜欢的人会直接表现出来，主动联系、直接表达、推进速度快。你不善于也不想掩饰自己的状态，感情对你来说是真实感受的直接输出。',
+    blind:'你的速度和强度有时候会超过对方准备好接受的程度。你以为你们在同一个频道，但对方可能还没准备好到那个深度。' },
+
+  PFHI:{ en:'EMBER', zh:'暗火型', tag:'里面是火，外面是冰',
+    desc:'里面是火，外面是冰。你动心很快，靠直觉走，会主动推进——但你不说。你在行动，只是方式隐蔽，别人感受不到你在喜欢一个人。\n\n你心里已经演完了无数遍可能的结局，但外面一个字都没说。你不是不敢，是不愿意，因为说出来意味着暴露，暴露意味着可能受伤。\n\n你的感情像一场只有你自己知道的戏。你在里面，别人在外面，你看着他们，他们看不见你。',
+    pattern:'内心状态和外在表现完全分离。你对一个人动心之后，内部已经开始运作——脑补场景、分析信号、设计接近方式——但外面看不出任何变化。',
+    blind:'你保护自己的方式让对方完全猜不透你。对方可能认为你对感情不感兴趣，或者对他没有特别的感觉，从而不会进一步接近你。' },
+
+  PFCE:{ en:'TIDE', zh:'温潮型', tag:'慢慢来，但你一定会来',
+    desc:'你的感情需要慢慢渗透进来。不会一眼就确定，需要相处、感受、让情绪一点点积累。感觉到了，你会说出来——你是说得出口的人，只是要等感觉真的来了才开口。\n\n你靠感觉判断，不需要具体的证据，直觉会告诉你这个人对不对。但你的直觉需要时间发育，不是第一眼的事。\n\n你的感情有一种温水上升的质感。不急，但一定会到。等你说出来的时候，已经是想清楚了的。',
+    pattern:'感情升温很慢，但一旦有感觉就会自然地表达出来。你的主动是在感觉积累到一定程度之后发生的，所以比较自然，不显得突兀。',
+    blind:'慢热让对方可能在感情还没到你那个状态之前就已经对你失去耐心，或者转移注意力了。你的感觉是真实的，但时差存在。' },
+
+  PFCI:{ en:'ABYSS', zh:'深海型', tag:'进去了，就是永远',
+    desc:'你的感情是最深的那种——因为你不会轻易让它出来。慢热，靠感觉，会主动但不显，藏得比谁都深。\n\n外人完全不知道你的状态，你自己也说不清楚进展到哪里了。你对感情的感知很强，但全部留在里面了，没有出口，也不需要出口。\n\n你的心里有一个完整的世界，只是没人进得去。进去了的人，是真的进去了，不会再出来。',
+    pattern:'从外面完全看不出你在喜欢一个人。你的感情进程在内心深处缓慢进行，不被任何外部因素加速或影响。你喜欢的人很可能毫不知情。',
+    blind:'你的感情是真实的，但对方永远不知道。你藏得太深了，以至于即使有机会，对方也不知道你愿意。' },
+
+  WRHE:{ en:'PULL', zh:'磁石型', tag:'不追，但让你想靠近',
+    desc:'你不追，但你会让别人想追你。你动心很快，直接说出来，但行动上你是等的那个——你不会第一个走过去，你让对方来找你。\n\n你需要看到实际的行动才确认感情，对方的主动是你判断的依据。感情确认了，你表达很直接。你的逻辑是：先让对方证明他在乎，然后你才真正投入。\n\n你有一种自然的吸引力——不是主动营造的，是你在那里，对方就想靠近你。',
+    pattern:'你对关系的感觉是真实的，也愿意说出来，但行动上你是接受方而不是发起方。你等对方来，然后你回应，你的回应是真实和直接的。',
+    blind:'你等待的方式可能让对方误以为你不感兴趣，从而不会主动靠近。你的吸引力是存在的，但需要对方有足够的勇气来推开第一扇门。' },
+
+  WRHI:{ en:'STILL', zh:'引力型', tag:'心里早有数了，只是不动',
+    desc:'你动心快，但什么都不说，也不先动。你在等证据，等对方的行动说明一切——你不靠直觉，你看实际发生了什么。\n\n心里已经有数了，外面一点看不出来。你知道自己喜不喜欢一个人，但你不会在对方证明他也在乎之前先暴露自己。\n\n你是那种让人完全猜不透的人，但你自己对对方的状态心里非常清楚。',
+    pattern:'外在完全静止，内心实时运转。你在观察对方的每一个行动，评估，判断，但你的脸上和行为上看不出任何变化。你在等一个信号。',
+    blind:'你在等证据，但对方可能也在等你的信号。两个人都在等，都在观望，最后什么都没有发生。' },
+
+  WRCE:{ en:'DRIFT', zh:'静流型', tag:'等得起，也说得出来',
+    desc:'你是最稳的那种。不追，等；慢热，需要时间；看证据，不靠直觉；想清楚了才说。你的感情里没有一丝冲动，每一步都是想过之后才走的。\n\n你的感情有一种安静的深度——不是因为你不在乎，是因为你对感情很认真，不想在没确认之前就折腾。\n\n你等得起，也说得出来，只是需要时间。等你说出来的时候，已经是最笃定的状态了。',
+    pattern:'感情进展缓慢但稳定。你不主动推进，但也不会退缩。你在等对方的行动告诉你可以走下一步，走下一步之前你会先想清楚。',
+    blind:'你的稳定有时候看起来像冷淡或不感兴趣。对方可能在等你给出一个信号，但你一直没有，于是他们开始怀疑你有没有感觉。' },
+
+  WRCI:{ en:'ISLE', zh:'孤岛型', tag:'进去之前要很久，进去了就是认真的',
+    desc:'你是感情里最难被读懂的人。不主动，慢热，靠证据判断，什么都藏着。对方主动了你也不一定有反应，因为你还在观察、在确认、在等。\n\n你对感情的门槛很高，不是因为挑剔，是因为你进入一段感情之前需要大量的时间和信息来确认这是值得的。\n\n进去了，就是认真的，而且是很认真的。',
+    pattern:'你的感情几乎完全发生在内心，外人看不出你的状态，甚至你自己也不确定自己在哪个阶段。你需要很多信息和时间才能确认一个人值得投入。',
+    blind:'你封闭的方式会让很多可能的感情在门口就结束了，因为对方看不到任何可以继续的信号。有时候不是对方不够好，是他找不到你。' },
+
+  WFHE:{ en:'SURGE', zh:'涌浪型', tag:'你的感情从来不缺戏，是真实的那种',
+    desc:'你的感情里有很多戏——是真实的那种，不是表演的。你动心很快，靠直觉，一句话就能让你心跳加速；你会把感受说出来，让对方知道你的状态；但你不先动，你等对方靠近你。\n\n你的感情能量很高，表达是真实的，情绪是真实的，对方能清楚感受到你喜欢他。但你的行动停在这里——你等，你表达，但你不推进。\n\n你在等一个主动来找你的人。',
+    pattern:'遇到喜欢的人会很快感受到强烈的情绪，而且不掩饰这种情绪。你会直接表达感受，但你不会主动推进关系，你等对方来迈出那一步。',
+    blind:'你的情绪表达是清晰的，但行动等待让对方不确定你是否真的想进入一段关系，还是只在享受暧昧的状态。' },
+
+  WFHI:{ en:'HAUNT', zh:'暗涌型', tag:'你心里的事比表面多得多',
+    desc:'你心里的事比表面多得多。动心很快，靠直觉，一个眼神就能触动你——但你什么都不说，也不先动。\n\n你在等，但你心里的戏已经演了很多集了。你分析对方的每一句话、每一个行为，在心里做出各种解读，然后继续等。别人看不出你喜欢谁，你喜欢的人也不一定知道你的存在。\n\n你的感情大部分只存在于你的内心世界里。',
+    pattern:'外在平静，内心丰富。遇到喜欢的人，你的内心立刻开始活跃，但外面没有任何变化。你在等一个足够明显的信号，让你确认可以了。',
+    blind:'你心里演的那些戏，对方一集都没看过。你的感情是单方面的内心剧场，除非你做出改变，否则它只能留在那里。' },
+
+  WFCE:{ en:'GLOW', zh:'暖光型', tag:'慢慢来，说出来，真实的',
+    desc:'你的感情是慢慢生长出来的。需要时间，需要感受积累，靠直觉而不是具体的证据——你等感觉真的来了才确认。\n\n你不先动，但感觉到了你会说出来。你不掩饰自己的状态，也不需要证明什么，只是自然地表达。\n\n你的感情有一种温暖的稳定感，不急，但真实。是那种让对方放心的类型——你说什么就是什么，没有隐藏的计算。',
+    pattern:'感情升温很慢，但一旦有感觉就会自然表现出来。你的感情状态是真实可见的，对方能感受到你是否有感觉，你不主动推进，但状态是开放的。',
+    blind:'你的慢热和等待组合在一起，会让关系长时间停留在模糊阶段。你有感觉了，他也有感觉了，但谁都没有推进，然后机会就过了。' },
+
+  WFCI:{ en:'VOID', zh:'黑洞型', tag:'吸收一切，不释放任何',
+    desc:'你是感情里吸收能量最多、释放最少的人。什么都靠感觉，慢慢累积，不先动，不说出来。你的内心世界极其丰富，但外人完全看不见。\n\n你对感情的感知很深，你能感受到对方的状态，感受到关系的变化，感受到那些细微的东西——只是全部留在里面了，没有出口。\n\n在对方眼里，你可能是最难读懂的人。而你，可能也不知道自己什么时候真的喜欢上了一个人。',
+    pattern:'你的感情状态完全不可见。你在感受，在积累，在等——但没有任何外在信号。对方能感受到你的存在，但感受不到你对他的态度。',
+    blind:'你完全不释放信号，导致对方没有任何方向感。有些人可能在感受不到反馈的情况下选择离开，而你甚至不知道自己错过了什么。' },
+};
+
+const DIMS_META = [
+  { name:'趋近动机', la:'P', la_word:'Pursue', lb:'W', lb_word:'Wait',   ca:'追', cb:'等' },
+  { name:'信息处理', la:'R', la_word:'Rational',lb:'F', lb_word:'Feel',   ca:'证', cb:'感' },
+  { name:'情感速度', la:'H', la_word:'Heat',    lb:'C', lb_word:'Cool',   ca:'快', cb:'慢' },
+  { name:'表达方式', la:'E', la_word:'Express', lb:'I', lb_word:'Internalize', ca:'说', cb:'藏' },
+];
+
+let shuffled = [], cur = 0, scores = [[0,0],[0,0],[0,0],[0,0]], history = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function show(id) {
+  ['landing','question-screen','result'].forEach(s =>
+    document.getElementById(s).classList.toggle('hidden', s !== id)
+  );
+  window.scrollTo(0, 0);
+}
+
+function startTest() {
+  shuffled = shuffle(QUESTIONS);
+  cur = 0;
+  scores = [[0,0],[0,0],[0,0],[0,0]];
+  history = [];
+  show('question-screen');
+  render();
+}
+
+function render() {
+  const q = shuffled[cur];
+  const n = cur + 1, total = shuffled.length;
+  const pct = Math.round((cur / total) * 100);
+  document.getElementById('btn-back').classList.toggle('invisible', cur === 0);
+  document.getElementById('q-num').textContent = `${n} / ${total}`;
+  document.getElementById('q-pct').textContent = `${pct}%`;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+  document.getElementById('q-index').textContent = `QUESTION ${String(n).padStart(2,'0')}`;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('choice-a').textContent = q.a;
+  document.getElementById('choice-b').textContent = q.b;
+}
+
+function answer(choice) {
+  const q = shuffled[cur];
+  history.push({ d: q.d, choice });
+  if (choice === 'a') scores[q.d][0]++;
+  else if (choice === 'b') scores[q.d][1]++;
+  cur++;
+  if (cur >= shuffled.length) showResult();
+  else render();
+}
+
+function goBack() {
+  if (cur === 0) return;
+  cur--;
+  const last = history.pop();
+  if (last.choice === 'a') scores[last.d][0]--;
+  else if (last.choice === 'b') scores[last.d][1]--;
+  render();
+}
+
+function showResult() {
+  const d0 = scores[0][0] >= scores[0][1] ? 'P' : 'W';
+  const d1 = scores[1][0] >= scores[1][1] ? 'R' : 'F';
+  const d2 = scores[2][0] >= scores[2][1] ? 'H' : 'C';
+  const d3 = scores[3][0] >= scores[3][1] ? 'E' : 'I';
+  const code = d0 + d1 + d2 + d3;
+  const t = TYPES[code];
+
+  document.getElementById('r-code').textContent = code + ' TYPE';
+  document.getElementById('r-name-en').textContent = t.en;
+  document.getElementById('r-name-zh').textContent = t.zh;
+  document.getElementById('r-tagline').textContent = t.tag;
+  document.getElementById('r-desc').textContent = t.desc;
+  document.getElementById('r-pattern').textContent = t.pattern;
+  document.getElementById('r-blind').textContent = t.blind;
+
+  const wrap = document.getElementById('r-dims');
+  wrap.innerHTML = '';
+  scores.forEach((s, i) => {
+    const total = s[0] + s[1];
+    const pct = total > 0 ? Math.round((s[0] / total) * 100) : 50;
+    const m = DIMS_META[i];
+    wrap.innerHTML += `
+      <div class="dim-block">
+        <p class="dim-name">${m.name}</p>
+        <div class="dim-row">
+          <div class="dim-end">
+            <span class="dim-letter">${m.la}</span>
+            <span class="dim-word">${m.ca}</span>
+          </div>
+          <div class="dim-track"><div class="dim-fill" style="width:${pct}%"></div></div>
+          <span class="dim-pct">${pct}%</span>
+          <div class="dim-end">
+            <span class="dim-letter">${m.lb}</span>
+            <span class="dim-word">${m.cb}</span>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  show('result');
+}
+
+function restartTest() { show('landing'); }
+</script>
+</body>
+</html>
